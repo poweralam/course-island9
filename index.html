@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>數位科技概論課程島｜認識網際網路</title>
+<style>
+:root{--ink:#4a4560;--ink2:#6f6a88;--card:rgba(255,255,255,.92);--accent:#8e7cc3;--accent2:#f4a6c0;--ok:#3f8f6d;--bad:#b5566f;--line:#e4def2;--soft:#f6f2ff}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden}
+body{font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;color:var(--ink);
+  background:linear-gradient(180deg,#cfe3ff 0%,#e6dcff 55%,#ffe6ee 100%)}
+body.low{background:linear-gradient(180deg,#e9ecf2 0%,#eeebf3 100%)}
+canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;outline:none;touch-action:none}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #8e7cc3;outline-offset:2px}
+#top{position:fixed;left:12px;right:12px;top:10px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between;pointer-events:none;z-index:5}
+#top>*{pointer-events:auto}
+.title{background:var(--card);border-radius:18px;padding:8px 16px;box-shadow:0 4px 16px rgba(120,100,170,.15)}
+.title h1{margin:0;font-size:clamp(16px,2.4vw,22px);letter-spacing:.04em}
+.title .sub{font-size:13px;color:var(--ink2)}
+.title .by{display:inline-block;margin-left:6px;font-size:12px;background:var(--soft);padding:1px 10px;border-radius:99px;color:var(--accent)}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pill{background:var(--card);border:2px solid transparent;border-radius:99px;padding:7px 14px;font-size:14px;box-shadow:0 3px 10px rgba(120,100,170,.14);transition:transform .2s,border-color .2s}
+.pill:hover{border-color:var(--accent2)}
+.pill[aria-pressed="true"]{background:#e8f6ee;border-color:#8cc9a9}
+.vol{display:flex;align-items:center;gap:6px;background:var(--card);border-radius:99px;padding:5px 12px;font-size:13px}
+.vol input{width:80px}
+#labels{position:fixed;inset:0;pointer-events:none;z-index:3;overflow:hidden}
+.island-label{position:absolute;left:0;top:0;pointer-events:auto;background:var(--card);border:2px solid #fff;border-radius:99px;padding:5px 12px;font-size:13px;white-space:nowrap;box-shadow:0 3px 10px rgba(120,100,170,.2)}
+.island-label.active{border-color:var(--accent);background:#fff}
+.island-label.done::after{content:" ⭐"}
+#nav{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:5;display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 16px);align-items:center}
+#nav .pill{padding:6px 12px;font-size:13px}
+#nav .pill.active{border-color:var(--accent);background:#fff}
+#nav .pill.done::after{content:" ⭐"}
+#prog{background:var(--card);border-radius:99px;padding:6px 12px;font-size:13px}
+#hint{position:fixed;left:14px;bottom:58px;z-index:4;font-size:12px;color:var(--ink2);background:rgba(255,255,255,.7);padding:4px 10px;border-radius:99px}
+#panel{position:fixed;z-index:6;right:14px;top:122px;bottom:62px;width:min(430px,calc(100vw - 28px));background:var(--card);border-radius:24px;box-shadow:0 10px 36px rgba(100,80,160,.22);padding:18px 20px 20px;overflow:auto;transform:translateX(calc(100% + 30px));transition:transform .35s ease;line-height:1.7;font-size:15px}
+#panel.open{transform:none}
+body.low #panel{transition:none;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+body.low *{transition:none!important;animation:none!important}
+#panel .close{position:absolute;right:12px;top:10px;border:0;background:var(--soft);width:32px;height:32px;border-radius:50%;font-size:16px}
+.tag{display:inline-block;background:var(--soft);color:var(--accent);padding:1px 10px;border-radius:99px;font-size:12px}
+#panel h2{margin:6px 0 0;font-size:22px}
+#panel h3{margin:16px 0 6px;font-size:16px;color:var(--accent)}
+#panel .sub{margin:0;color:var(--ink2);font-size:13px}
+#panel ul{margin:4px 0;padding-left:20px}
+#panel li{margin:3px 0}
+table{border-collapse:collapse;width:100%;font-size:13px;margin:6px 0}
+th,td{border:1px solid var(--line);padding:4px 8px;text-align:left}
+th{background:var(--soft)}
+.note{font-size:12.5px;color:var(--ink2);background:#fbf8ff;border-left:4px solid var(--accent2);padding:6px 10px;border-radius:8px;margin:8px 0}
+.act{background:#fbf9ff;border:1px solid var(--line);border-radius:16px;padding:10px 12px;margin-top:10px}
+.act h3{margin-top:2px}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
+.row .nm{min-width:110px;font-weight:600}
+.chip,.tab,.opt{border:2px solid var(--line);background:#fff;border-radius:12px;padding:4px 10px;font-size:14px}
+.chip:hover,.tab:hover,.opt:hover{border-color:var(--accent2)}
+.chip.ok,.opt.ok,.tab.on,.chip.on{border-color:#7fc3a0;background:#e8f6ee}
+.chip.no,.opt.no{border-color:#e0a1b5;background:#fdeef3}
+.opt{display:block;width:100%;text-align:left;margin:5px 0}
+.fb,.ex{font-size:13px;color:var(--ink2)}
+.q{border-top:1px dashed var(--line);padding-top:6px;margin-top:6px}
+.q:first-child{border-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.detail{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:14px}
+.bar{height:12px;border-radius:99px;background:#eee9f8;overflow:hidden;margin:6px 0}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#a7c8ff,#f4a6c0);border-radius:99px}
+input[type=text],select{font:inherit;border:2px solid var(--line);border-radius:10px;padding:4px 8px;width:100%;background:#fff;color:var(--ink)}
+label{display:block;font-size:13px;margin:6px 0 2px;color:var(--ink2)}
+.out{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin-top:6px;font-size:14px;word-break:break-all}
+.seg{display:inline-block;padding:0 6px;border-radius:8px;margin:1px;font-weight:600}
+.s1{background:#ffd9e4}.s2{background:#d7e8ff}.s3{background:#fff1b8}.s4{background:#dff3e4}.s5{background:#e6dcff}
+.pnav{display:flex;justify-content:space-between;margin-top:14px;gap:8px}
+#toast{position:fixed;left:50%;top:76px;transform:translateX(-50%);z-index:9;background:#fff;border-radius:18px;padding:10px 18px;box-shadow:0 8px 24px rgba(100,80,160,.25);display:none}
+#fallback{display:none;position:fixed;left:14px;top:140px;z-index:4;background:#fff7e6;border-radius:14px;padding:10px 14px;max-width:340px;font-size:13px}
+body.no3d #fallback{display:block}
+@media (max-width:820px){
+  #panel{left:8px;right:8px;width:auto;top:auto;bottom:100px;max-height:50vh;transform:translateY(calc(100% + 120px))}
+  #panel.open{transform:none}
+  #hint{display:none}
+  .island-label{font-size:12px;padding:3px 8px}
+}
+[hidden]{display:none!important}
+.overlay{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(232,226,248,.88)}
+body.low .overlay{background:rgba(238,235,243,.97)}
+.card{background:#fff;border-radius:24px;box-shadow:0 10px 36px rgba(100,80,160,.22);padding:20px 24px;width:min(430px,100%);max-height:100%;overflow:auto}
+.card h2{margin:0 0 4px;font-size:21px}
+.card p{margin:6px 0;font-size:14px;color:var(--ink2)}
+.card input[type=text],.card input[type=password]{font-size:18px;padding:8px 12px;margin:6px 0 4px}
+.row2{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.btn{border:2px solid #6f5bb0;background:#6f5bb0;color:#fff;border-radius:99px;padding:8px 18px;font-size:15px}
+.btn.ghost{background:#fff;color:#5a479a}
+.err{color:var(--bad);font-size:13px;min-height:1.4em}
+#syncchip{font-size:13px;background:var(--card);border-radius:99px;padding:7px 12px;box-shadow:0 3px 10px rgba(120,100,170,.14)}
+#teacher .card{width:min(1000px,100%);height:min(88vh,740px);display:flex;flex-direction:column}
+.thead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tw{overflow:auto;flex:1;margin-top:8px;border:1px solid var(--line);border-radius:12px}
+.tw table{margin:0;font-size:14px}
+.tw th{position:sticky;top:0;z-index:1;white-space:nowrap}
+.tw td{white-space:nowrap}
+td.c0{background:#f1eff6;color:#7d7894}td.c1{background:#fff3c9}td.c2{background:#dcf2e6}
+td.num{text-align:center;font-variant-numeric:tabular-nums}
+#tSum{margin-top:6px;font-size:14px}
+</style>
+</head>
+<body>
+<canvas id="c" tabindex="0" aria-label="3D 課程島，可拖曳旋轉、滾輪縮放、點島嶼前往"></canvas>
+<div id="labels"></div>
+<div id="fallback">⚠️ 3D 畫面需要連網載入 three.js，目前無法顯示；下方島嶼按鈕與課程內容仍可使用。</div>
+
+<div id="top">
+  <div class="title">
+    <h1>🏝️ 數位科技概論課程島<span class="by">by <span id="author">權鈺</span></span></h1>
+    <div class="sub">第 9 章・認識網際網路</div>
+  </div>
+  <div class="ctrls">
+    <button class="pill" id="btnMusic" aria-pressed="false">🎵 背景音樂：關</button>
+    <label class="vol" style="margin:0" title="音量">🔈<input type="range" id="vol" min="0" max="100" value="40" aria-label="音量"></label>
+    <button class="pill" id="btnLow" aria-pressed="false">🌿 低刺激模式：關</button>
+    <button class="pill" id="btnHome">🗺️ 回總覽</button>
+    <span id="syncchip" role="status" hidden></span>
+    <button class="pill" id="btnSwitch" hidden>🔁 換學號</button>
+    <button class="pill" id="btnTeacher">👩‍🏫 教師</button>
+  </div>
+</div>
+<div id="hint">拖曳旋轉・滾輪縮放・點島嶼前往（也可按 1～5）</div>
+<div id="nav"></div>
+<aside id="panel" aria-live="polite"></aside>
+<div id="toast" role="status"></div>
+
+<div id="login" class="overlay" role="dialog" aria-modal="true" aria-labelledby="lgT">
+  <form class="card" id="lgForm" autocomplete="off">
+    <h2 id="lgT">🏝️ 歡迎登島</h2>
+    <p>請輸入你的學號，老師就能看到你的闖關進度。只會記錄學號與學習進度。</p>
+    <label for="sidin">學號（3～12 位英文或數字）</label>
+    <input type="text" id="sidin" maxlength="12" autocapitalize="off" autocomplete="off" spellcheck="false">
+    <div class="err" id="lgErr" role="alert"></div>
+    <div class="row2"><button class="btn" type="submit">出發</button><button class="btn ghost" type="button" id="lgSkip">先不連線體驗</button></div>
+    <p id="lgNote"></p>
+  </form>
+</div>
+<div id="teacher" class="overlay" role="dialog" aria-modal="true" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* ============ 可自行修改 ============ */
+const AUTHOR = '權鈺';
+// 課堂同步：貼上 Google Apps Script「網頁應用程式」網址（結尾是 /exec）。留空＝進度只存在學生自己的電腦。
+const SYNC_URL = 'https://script.google.com/a/macros/hshs.chc.edu.tw/s/AKfycbxMan7iNv9fJleds5stMxo8FZYQochbVEKIvS4MK44vuBA9EeFQ8RV3KjYIAQWxgrcxxA/exec';
+/* ==================================== */
+document.getElementById('author').textContent = AUTHOR;
+
+/* ---------- 狀態 ---------- */
+let low = false;
+try{ const s=localStorage.getItem('island_low'); if(s!==null) low = s==='1'; else if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) low=true; }catch(e){}
+let current = -1;
+const done = [new Set(),new Set(),new Set(),new Set(),new Set()];
+const $ = s=>document.querySelector(s);
+const isMobile = ()=>innerWidth<=820;
+
+/* ---------- 課程資料 ---------- */
+const ISLANDS = [
+{ id:'A', emoji:'📡', name:'連網服務島', sub:'ISP・ICP・NSP', widget:widgetA,
+  body:`<h3>📘 重點</h3><ul>
+  <li><b>ISP</b>（網際網路服務提供者）：提供連接網際網路服務的電信業者或政府單位。</li>
+  <li>ISP 通常還提供入口網站、電子郵件帳號、網頁存放空間等附加服務。</li>
+  <li><b>ICP</b>（網際網路內容提供者）：提供各類資訊的網站經營業者，如 Yahoo!奇摩、聯合新聞網、PChome、104 人力銀行。</li>
+  <li><b>NSP</b>（網路服務提供者）：提供 ISP 業者租用骨幹網路，如中華電信、AT&amp;T。中華電信既是 NSP 也是 ISP。</li></ul>
+  <table><tr><th>ISP</th><th>成立單位</th><th>收費</th><th>對象</th></tr>
+  <tr><td>TANet</td><td>教育部</td><td>免費</td><td>各級學校、研究單位</td></tr>
+  <tr><td>HiNet</td><td>中華電信</td><td rowspan="4">收費</td><td rowspan="4">公司行號、一般大眾</td></tr>
+  <tr><td>TWM</td><td>台灣固網</td></tr><tr><td>Seednet</td><td>數位聯合電信</td></tr><tr><td>So-net</td><td>索尼（Sony）</td></tr></table>
+  <div class="note">註：數位聯合電信公司已於 2009 年被新世紀資通併購。</div>`,
+  quiz:[
+   {q:'Yahoo!奇摩通常扮演什麼角色？',o:['ISP','ICP','NSP','DNS'],a:1,ex:'提供各類資訊的網站經營業者是網際網路內容提供者（ICP）。'},
+   {q:'由教育部成立、免費提供學校與研究單位連網的是？',o:['HiNet','Seednet','TANet','So-net'],a:2,ex:'TANet（臺灣學術網路）由教育部成立，免費。'},
+   {q:'下列何者「不可能」是 ISP 提供的服務？',o:['提供連網服務','提供網頁存放空間','提供電子郵件帳號','提供國安局機密資料全文免費查詢'],a:3,ex:'ISP 提供連網、網頁空間、電子郵件等，不會提供機密資料。'},
+   {q:'中華電信同時扮演哪兩種角色？',o:['NSP 與 ISP','ICP 與 DNS','ISP 與 ICP','NSP 與 ICP'],a:0,ex:'中華電信出租骨幹網路（NSP），也直接服務用戶上網（ISP）。'}]},
+{ id:'B', emoji:'🛰️', name:'連線方式島', sub:'有線與無線上網', widget:widgetB,
+  body:`<h3>📘 重點</h3><ul>
+  <li><b>電話線撥接</b>：上網時電話線會被占用，速度最慢。</li>
+  <li><b>ADSL</b>：語音與網路訊號分離，上網同時也能講電話；下載速度 &gt; 上傳速度，稱為「非對稱」。</li>
+  <li><b>纜線數據機</b>：走有線電視纜線，頻寬由所有用戶共享，人越多越慢。</li>
+  <li><b>專線</b>（T1～T4）：固定線路，品質穩定但費用高。</li>
+  <li><b>光纖</b>：FTTH（到府）最快 &gt; FTTB（到大樓）&gt; FTTC（到路側）；靠光傳播，不受雷擊等電流影響。</li>
+  <li><b>無線</b>：Wi-Fi（IEEE 802.11x）、3G/3.5G、4G LTE、5G NR；需安裝對應網卡。</li>
+  <li>行動世代：2G 9.6 Kbps → 2.5G 115.2 Kbps → 3G 2 Mbps → 3.5G 14.4 Mbps → 4G 300 Mbps → 5G 10 Gbps（可實現物聯網）。</li></ul>`,
+  quiz:[
+   {q:'使用 ADSL 上網時，可以同時撥打電話嗎？',o:['不行，線路被占用','可以，語音與網路訊號分離','只有半夜可以','要另外加裝光纖'],a:1,ex:'ADSL 採語音與網路訊號分離技術。'},
+   {q:'「家裡越多人上網，連線越慢」最可能是哪一種方式？',o:['纜線數據機','專線 T1','光纖到府 FTTH','ADSL'],a:0,ex:'纜線數據機的頻寬由所有用戶共享。'},
+   {q:'FTTH、FTTB、FTTC 哪一種速度最快？',o:['FTTC','FTTB','FTTH','一樣快'],a:2,ex:'光纖到府（FTTH）離用戶最近，速度最快。'},
+   {q:'ADSL 頻寬 8M/640K，上傳速度最高約為？',o:['8M','640K','1M','256K'],a:1,ex:'「下載/上傳」，所以上傳是 640K。'},
+   {q:'理論傳輸速度最高、可望實現「物聯網」的行動通訊技術是？',o:['3G','3.5G','4G LTE','5G NR'],a:3,ex:'5G NR 理論速度約 10 Gbps。'}]},
+{ id:'C', emoji:'🏠', name:'IP 位址島', sub:'IPv4・IPv6・公私有 IP', widget:widgetC,
+  body:`<h3>📘 重點</h3><ul>
+  <li>IP 位址像電腦的「門牌號碼」，每個都是唯一的。</li>
+  <li><b>IPv4</b>：4 個 0～255 的數字，以「.」隔開，如 140.111.34.147（32 位元）。</li>
+  <li><b>IPv6</b>：128 位元，8 組、每組 4 個 16 進位數，以「:」隔開；前面的 0 可省略，連續的 0000 可用「::」代表，且只能出現一次。</li>
+  <li><b>固定 IP</b>：電信業者給的專屬位址（架站用）；<b>浮動 IP</b>：由 DHCP Server 分配，每次可能不同。</li>
+  <li><b>公有 IP</b>可連上網際網路；<b>私有 IP</b>只供內部網路使用；<b>NAT</b>可讓多台電腦共用一個合法 IP。</li>
+  <li>特殊位址：127.0.0.1 測試本機；主機位址為 0＝整個網路；為 255＝廣播。</li></ul>
+  <table><tr><th>等級</th><th>第 1 個數值</th><th>用途</th></tr>
+  <tr><td>A</td><td>0～127</td><td>政府、國家級研究</td></tr><tr><td>B</td><td>128～191</td><td>大企業、ISP、學術</td></tr>
+  <tr><td>C</td><td>192～223</td><td>一般企業</td></tr><tr><td>D</td><td>224～239</td><td>群播（特殊用途）</td></tr><tr><td>E</td><td>240～255</td><td>學術等保留</td></tr></table>
+  <table><tr><th>私有 IP 範圍</th></tr><tr><td>10.0.0.0 ～ 10.255.255.255</td></tr><tr><td>172.16.0.0 ～ 172.31.255.255</td></tr><tr><td>192.168.0.0 ～ 192.168.255.255</td></tr></table>
+  <div class="note">口訣：A 冷（0）、B 伊愛爸（128）、C 伊就餓（192）。</div>`,
+  quiz:[
+   {q:'224.0.0.1 屬於哪一個 Class？',o:['Class A','Class B','Class C','Class D'],a:3,ex:'224～239 是 Class D，作群播等特殊用途。'},
+   {q:'下列何者「不是」合法的 IPv4 位址？',o:['210.121.8.32','256.16.21.10','121.107.255.33','63.11.35.1'],a:1,ex:'每個數值必須在 0～255 之間，256 超出範圍。'},
+   {q:'想測試「本機」TCP/IP 環境是否正常，可 ping 哪個位址？',o:['0.0.0.0','127.0.0.1','192.168.10.1','255.255.255.255'],a:1,ex:'127.0.0.1 是本機測試用位址。'},
+   {q:'IPv6 位址長度是多少位元？',o:['32','64','128','256'],a:2,ex:'IPv6 為 128 位元，是 IPv4（32 位元）的 4 倍長。'},
+   {q:'家中電腦比可用 IP 還多又要同時上網，可用哪種技術？',o:['NAT','DNS','URL','FTP'],a:0,ex:'NAT 把私有 IP 轉成合法 IP，讓多台電腦共用。'}]},
+{ id:'D', emoji:'🧩', name:'子網路與指令島', sub:'子網路遮罩・網路指令', widget:widgetD,
+  body:`<h3>📘 重點</h3><ul>
+  <li><b>子網路</b>：為方便管理維護，把單位內的網路切成數個小網路。</li>
+  <li>切法：從<b>主機位址</b>借用幾個位元當子網路位址。Class C 借 2 位元 → 4（2²）個子網路，每個 64 個 IP。</li>
+  <li><b>子網路遮罩</b>：網路位址位元為 1、主機位址位元為 0。預設：A 255.0.0.0、B 255.255.0.0、C 255.255.255.0。</li>
+  <li>IP 與遮罩做 <b>AND 運算</b>得到網路位址；結果相同就屬於同一個網段。</li></ul>
+  <table><tr><th>指令</th><th>用途</th></tr>
+  <tr><td>ping</td><td>測試目的主機是否正常（會回傳回應時間）</td></tr>
+  <tr><td>ipconfig</td><td>查詢本機 IP 與設定（/all 還可查 MAC）</td></tr>
+  <tr><td>tracert</td><td>顯示連線到某主機所經過的路由器</td></tr>
+  <tr><td>telnet</td><td>登入遠端主機，可連上 BBS 站</td></tr>
+  <tr><td>ftp</td><td>登入檔案傳輸服務主機</td></tr></table>`,
+  quiz:[
+   {q:'把一個 Class C 網路切成 2 個子網路，子網路遮罩應設為？',o:['255.255.255.0','255.255.255.128','255.255.255.192','255.255.0.0'],a:1,ex:'借 1 個位元 → 2 個子網路，最後一組為 10000000＝128。'},
+   {q:'想知道某台主機是否運作正常，用哪個指令？',o:['ping','ipconfig','tracert','ftp'],a:0,ex:'ping 會回傳回應時間。'},
+   {q:'顯示本機到某主機「經過的所有路由器」的指令是？',o:['ping','ipconfig','tracert','telnet'],a:2,ex:'tracert 列出沿途路由器。'},
+   {q:'IP 210.242.128.129、遮罩 255.255.255.0，網路位址是？',o:['210.242.128.0','210.242.0.0','210.0.0.0','210.242.128.129'],a:0,ex:'前 3 組是網路位址，最後一組主機位址歸 0。'}]},
+{ id:'E', emoji:'🌐', name:'網域與網址島', sub:'網域名稱・DNS・URL', widget:widgetE,
+  body:`<h3>📘 重點</h3><ul>
+  <li><b>網域名稱</b>：主機的代稱，作用和 IP 相同。結構：主機名稱 . 機構名稱 . 機構類別 . 地理名稱，例如 www.cwb.gov.tw。</li>
+  <li>類別：edu 教育、gov 政府、org 非營利、net 網路、com 公司行號、mil 軍事、idv 個人、biz 商業。</li>
+  <li>地理：tw 臺灣、hk 香港、cn 中國、jp 日本、uk 英國、au 澳洲、ca 加拿大、eu 歐盟、kr 韓國；美國不需地理名稱。</li>
+  <li><b>DNS Server</b> 負責把網域名稱轉換成 IP 位址。TWNIC 負責我國 IP 與網域；ICANN 統籌全球 IP 分配。</li>
+  <li><b>URL</b>：通訊協定://網域名稱[:埠位址]/路徑檔名。</li>
+  <li>網域名稱不分大小寫；路徑檔名大小寫要正確。</li>
+  <li>網路蟑螂（cybersquatting）：搶註網域名稱再高價轉售，1999 年 WIPO 列為非法。</li></ul>
+  <table><tr><th>協定</th><th>服務</th><th>預設埠</th></tr>
+  <tr><td>http</td><td>全球資訊網</td><td>80</td></tr><tr><td>https</td><td>SSL 安全機制</td><td>443</td></tr>
+  <tr><td>ftp</td><td>檔案傳輸</td><td>21</td></tr><tr><td>telnet</td><td>遠端登入</td><td>23</td></tr>
+  <tr><td>SMTP / POP3 / IMAP</td><td>寄信 / 收信</td><td>25 / 110 / 143</td></tr><tr><td>DNS</td><td>網域名稱服務</td><td>53</td></tr></table>
+  <div class="note">mailto 不加「//」；Windows 區域網路用 UNC 格式：&bsol;&bsol;電腦主機名稱&bsol;路徑檔名。</div>`,
+  quiz:[
+   {q:'www.cwb.gov.tw 中的 gov 代表？',o:['教育機構','政府機構','公司行號','非營利組織'],a:1,ex:'gov（government）＝政府機構。'},
+   {q:'HTTPS 的預設埠位址是？',o:['80','21','443','25'],a:2,ex:'HTTP 80、HTTPS 443、FTP 21、SMTP 25。'},
+   {q:'把網域名稱轉成 IP 位址的是？',o:['DHCP','NAT','DNS Server','Wi-Fi AP'],a:2,ex:'DNS Server 負責網域名稱轉換為 IP。'},
+   {q:'下列哪一個 URL 寫法「錯誤」？',o:['https://www.abc.com','ftp://server1.abc.com','bbs://server2.abc.com','mailto:fish@mail.com.tw'],a:2,ex:'常用協定沒有 bbs://；連 BBS 要用 telnet://。'},
+   {q:'接收郵件的 POP3 協定，預設埠號是？',o:['110','143','25','53'],a:0,ex:'POP3 110、IMAP 143、SMTP 25、DNS 53。'}]}
+];
+
+/* ---------- 小活動 ---------- */
+function widgetA(el){
+  const items=[['TANet',['ISP']],['HiNet',['ISP']],['Yahoo!奇摩',['ICP']],['104 人力銀行',['ICP']],['PChome',['ICP']],['AT&amp;T',['NSP']],['中華電信',['ISP','NSP']]];
+  el.innerHTML='<p class="hint" style="margin:0 0 4px">替每個機構選出它的角色：</p>'+items.map((it,i)=>`<div class="row" data-i="${i}"><span class="nm">${it[0]}</span>${['ISP','ICP','NSP'].map(r=>`<button class="chip" data-r="${r}">${r}</button>`).join('')}<span class="fb"></span></div>`).join('');
+  el.querySelectorAll('.row').forEach(row=>{
+    const i=+row.dataset.i, fb=row.querySelector('.fb');
+    row.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      const ok=items[i][1].includes(b.dataset.r);
+      b.classList.toggle('ok',ok); b.classList.toggle('no',!ok);
+      fb.textContent = ok ? (items[i][1].length>1?'✔ 對！它同時是 ISP 與 NSP':'✔ 答對了') : '✖ 再想想看';
+    });
+  });
+}
+function widgetB(el){
+  const wired=[
+   {n:'電話線撥接',m:'電話線',s:'最慢',c:'便宜',note:'上網時電話線路會被占用。',bar:6},
+   {n:'ADSL',m:'電話線',s:'快',c:'中等',note:'語音與網路訊號分離，邊上網邊講電話；下載速度 > 上傳速度（非對稱）。',bar:50},
+   {n:'纜線數據機',m:'有線電視纜線',s:'快',c:'中等',note:'頻寬由所有用戶共享，上線的人越多越慢。',bar:50},
+   {n:'光纖',m:'光纖',s:'較快',c:'中等',note:'FTTH > FTTB > FTTC；靠光傳播，不受雷擊等電流影響。',bar:80},
+   {n:'專線 T1～T4',m:'雙絞線或光纖',s:'較快',c:'昂貴',note:'T1 1.544 Mbps、T2 6.312、T3 44.736、T4 274.176 Mbps；品質穩定但費用高。',bar:80}];
+  const wl=[
+   {n:'Wi-Fi',sp:'11 Mbps ～ 9.6 Gbps',d:'100～200 公尺',eg:'咖啡廳、捷運站上網',v:9600},
+   {n:'3G / 3.5G',sp:'2 Mbps ～ 14.4 Mbps',d:'2～14 公里',eg:'行動上網（手機、平板）',v:14.4},
+   {n:'4G LTE',sp:'最高 300 Mbps',d:'100 公里',eg:'行動上網（手機、平板、電腦）',v:300},
+   {n:'5G NR',sp:'10 Gbps',d:'250 公尺',eg:'手機、平板、自駕車、物聯網',v:10000}];
+  let kind='w', sel=0;
+  el.innerHTML=`<div class="chips"><button class="tab on" data-k="w">有線</button><button class="tab" data-k="x">無線</button></div><div class="chips" id="bc"></div><div class="detail" id="bd"></div>`;
+  const bc=el.querySelector('#bc'), bd=el.querySelector('#bd');
+  function draw(){
+    const arr=kind==='w'?wired:wl;
+    bc.innerHTML=arr.map((x,i)=>`<button class="chip ${i===sel?'on':''}" data-i="${i}">${x.n}</button>`).join('');
+    const x=arr[sel];
+    if(kind==='w'){
+      bd.innerHTML=`<b>${x.n}</b><br>傳輸媒介：${x.m}<br>速度：${x.s}　費用：${x.c}<div class="bar" aria-hidden="true"><i style="width:${x.bar}%"></i></div><span class="fb">（長條為示意）</span><br>${x.note}`;
+    }else{
+      const pct=Math.max(4,Math.log10(x.v)/Math.log10(10000)*100);
+      bd.innerHTML=`<b>${x.n}</b><br>理論速度：${x.sp}<br>傳輸距離：${x.d}<br>應用：${x.eg}<div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div><span class="fb">（最高速度，對數刻度示意）</span>`;
+    }
+    bc.querySelectorAll('button').forEach(b=>b.onclick=()=>{sel=+b.dataset.i;draw();});
+  }
+  el.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{kind=t.dataset.k;sel=0;el.querySelectorAll('.tab').forEach(o=>o.classList.toggle('on',o===t));draw();});
+  draw();
+}
+function parseIP(s){const p=s.trim().split('.'); if(p.length!==4||p.some(x=>!/^\d{1,3}$/.test(x)||+x>255)) return null; return p.map(Number);}
+function widgetC(el){
+  el.innerHTML=`<label for="ipin">輸入一個 IPv4 位址：</label><input type="text" id="ipin" value="140.112.8.116" inputmode="decimal"><div class="out" id="ipout"></div>
+  <label for="v6in" style="margin-top:12px">IPv6 縮寫練習（輸入 8 組完整位址）：</label><input type="text" id="v6in" value="2001:0288:4200:0000:0000:0000:0000:0024"><div class="out" id="v6out"></div>`;
+  const out=el.querySelector('#ipout');
+  function a1(){
+    const p=parseIP(el.querySelector('#ipin').value);
+    if(!p){out.innerHTML='❌ 不是合法的 IPv4：需要 4 個 0～255 的數字，以「.」隔開。';return;}
+    const f=p[0]; let cls,mask,hostN;
+    if(f<=127){cls='A';mask='255.0.0.0';hostN=3}else if(f<=191){cls='B';mask='255.255.0.0';hostN=2}else if(f<=223){cls='C';mask='255.255.255.0';hostN=1}else if(f<=239){cls='D'}else{cls='E'}
+    let h=`✅ 合法 IPv4<br>等級：<b>Class ${cls}</b>`;
+    if(mask) h+=`（預設遮罩 ${mask}）`; else h+=`（${cls==='D'?'群播':'保留'}，特殊用途）`;
+    const priv=f===10||(f===172&&p[1]>=16&&p[1]<=31)||(f===192&&p[1]===168);
+    h+=`<br>類型：<b>${priv?'私有（虛擬）IP，無法直接連上網際網路':'公有（合法）IP 範圍'}</b>`;
+    if(p.join('.')==='127.0.0.1') h+='<br>🔁 本機測試位址（ping 127.0.0.1 測 TCP/IP 環境）';
+    if(hostN){const host=p.slice(4-hostN);
+      if(host.every(x=>x===0)) h+='<br>🏷️ 主機位址全為 0：代表「整個網路」';
+      if(host.every(x=>x===255)) h+='<br>📢 主機位址全為 255：代表對此網路「廣播」';}
+    out.innerHTML=h;
+  }
+  function a2(){
+    const g=el.querySelector('#v6in').value.trim().split(':'), o=el.querySelector('#v6out');
+    if(g.length!==8||g.some(x=>!/^[0-9a-fA-F]{1,4}$/.test(x))){o.textContent='需要 8 組、每組 1～4 個 16 進位數字。';return;}
+    const s=g.map(x=>x.replace(/^0+(?=.)/,'').toLowerCase());
+    let best=-1,bl=0;
+    for(let i=0;i<8;){ if(s[i]==='0'){let j=i;while(j<8&&s[j]==='0')j++; if(j-i>bl){bl=j-i;best=i;} i=j;} else i++; }
+    let r;
+    if(bl>=2){const L=s.slice(0,best).join(':'),R=s.slice(best+bl).join(':'); r=L+'::'+R;} else r=s.join(':');
+    o.innerHTML=`省略前導 0、連續 0 以「::」代替（只能用一次）：<br><b>${r}</b>`;
+  }
+  el.querySelector('#ipin').oninput=a1; el.querySelector('#v6in').oninput=a2; a1(); a2();
+}
+function widgetD(el){
+  el.innerHTML=`<label for="bits">從 Class C 的主機位址借用幾個位元？ <b id="bv">2</b> 個</label><input type="range" id="bits" min="0" max="6" value="2" style="width:100%">
+  <div class="out" id="sub"></div>
+  <h3 style="margin-top:14px">同一個網段嗎？（AND 運算）</h3>
+  <label for="ip1">A 電腦 IP</label><input type="text" id="ip1" value="192.168.123.112">
+  <label for="ip2">B 電腦 IP</label><input type="text" id="ip2" value="192.168.123.68">
+  <label for="mk">子網路遮罩</label><input type="text" id="mk" value="255.255.255.192">
+  <div class="out" id="and"></div>`;
+  const bits=el.querySelector('#bits');
+  function s1(){
+    const n=+bits.value; el.querySelector('#bv').textContent=n;
+    const cnt=1<<n, size=256/cnt, mk=256-size; let rows='';
+    for(let k=0;k<Math.min(cnt,8);k++) rows+=`<div><span class="seg s${(k%5)+1}">子網路 ${k+1}</span> 192.168.123.${k*size} ～ 192.168.123.${k*size+size-1}</div>`;
+    if(cnt>8) rows+='<div>…（其餘省略）</div>';
+    el.querySelector('#sub').innerHTML=`子網路數：<b>${cnt}</b>（2<sup>${n}</sup>）｜每個 <b>${size}</b> 個 IP｜遮罩：<b>255.255.255.${mk}</b><br>${rows}<div class="fb">每個子網路實務上還要扣掉網路位址與廣播位址。</div>`;
+  }
+  function s2(){
+    const a=parseIP(el.querySelector('#ip1').value),b=parseIP(el.querySelector('#ip2').value),m=parseIP(el.querySelector('#mk').value),o=el.querySelector('#and');
+    if(!a||!b||!m){o.textContent='請輸入合法的 IPv4（4 個 0～255 的數字）。';return;}
+    const na=a.map((x,i)=>x&m[i]).join('.'), nb=b.map((x,i)=>x&m[i]).join('.');
+    o.innerHTML=`A 的網路位址：<b>${na}</b><br>B 的網路位址：<b>${nb}</b><br>${na===nb?'✅ 相同 → 屬於同一個子網路':'❌ 不同 → 不在同一個子網路'}`;
+  }
+  bits.oninput=s1; ['#ip1','#ip2','#mk'].forEach(q=>el.querySelector(q).oninput=s2); s1(); s2();
+}
+function widgetE(el){
+  const cats={edu:'教育機構',gov:'政府機構',org:'非營利組織',net:'網路機構',com:'公司行號',mil:'軍事組織',idv:'個人網站',biz:'商業機構'};
+  const geo={tw:'臺灣',hk:'香港',cn:'中國',jp:'日本',uk:'英國',au:'澳洲',ca:'加拿大',eu:'歐盟',kr:'韓國'};
+  const protos={http:['全球資訊網','80'],https:['SSL 安全機制','443'],ftp:['檔案傳輸','21'],telnet:['遠端登入','23'],mailto:['電子郵件',''],file:['檔案伺服器','']};
+  el.innerHTML=`<label for="dn">網域名稱拆解：</label><input type="text" id="dn" value="www.cwb.gov.tw"><div class="out" id="dnout"></div>
+  <h3 style="margin-top:14px">URL 組裝</h3>
+  <label for="pr">通訊協定</label><select id="pr">${Object.keys(protos).map(k=>`<option>${k}</option>`).join('')}</select>
+  <label for="dm">網域名稱（mailto 請輸入信箱）</label><input type="text" id="dm" value="www.edu.tw">
+  <label for="pt">埠位址（可留空）</label><input type="text" id="pt" value="" inputmode="numeric">
+  <label for="ph">路徑檔名（可留空）</label><input type="text" id="ph" value="index.aspx">
+  <div class="out" id="urlout"></div>`;
+  function e1(){
+    const parts=el.querySelector('#dn').value.trim().toLowerCase().split('.').filter(Boolean), o=el.querySelector('#dnout');
+    if(parts.length<2){o.textContent='請輸入像 www.cwb.gov.tw 的網域名稱。';return;}
+    let n=parts.length,g=null,c=null;
+    if(geo[parts[n-1]]){g=parts[n-1];n--;}
+    if(n>=2&&cats[parts[n-1]]){c=parts[n-1];n--;}
+    const org=n>=2?parts[n-1]:null, host=n>=2?parts.slice(0,n-1).join('.'):parts.slice(0,n).join('.');
+    let h='';
+    if(host) h+=`<span class="seg s1">${host}</span> 主機名稱（常依服務命名）<br>`;
+    if(org&&org!==host) h=h.replace(`${host}</span> 主機名稱`,`${host}</span> 主機名稱`)+'';
+    const orgName=n>=2?parts[n-1]:null;
+    h=''; const hostPart=n>=2?parts.slice(0,n-1).join('.'):parts[0];
+    h+=`<span class="seg s1">${hostPart}</span> 主機名稱<br>`;
+    if(orgName&&n>=2) h+=`<span class="seg s2">${orgName}</span> 機構名稱<br>`;
+    if(c) h+=`<span class="seg s3">${c}</span> 機構類別：${cats[c]}<br>`;
+    h+= g?`<span class="seg s4">${g}</span> 地理名稱：${geo[g]}`:`<span class="seg s5">（省略）</span> 沒有地理名稱 → 一般視為美國`;
+    o.innerHTML=h;
+  }
+  function e2(){
+    const p=el.querySelector('#pr').value,d=el.querySelector('#dm').value.trim(),pt=el.querySelector('#pt').value.trim(),ph=el.querySelector('#ph').value.trim().replace(/^\//,'');
+    let u; if(p==='mailto') u='mailto:'+(d.includes('@')?d:'abc@'+d); else u=p+'://'+d+(pt?':'+pt:'')+(ph?'/'+ph:'');
+    const def=protos[p][1];
+    let h=`<b>${u}</b><br>服務：${protos[p][0]}`;
+    if(p==='mailto') h+='<br>💡 mailto 不加「//」。';
+    else if(def) h+=`<br>預設埠：${def}${pt&&pt===def?'（與預設相同，可省略不輸入）':pt?'（自訂埠，必須寫在網址裡）':'（沒寫就自動使用預設）'}`;
+    el.querySelector('#urlout').innerHTML=h;
+  }
+  el.querySelector('#dn').oninput=e1; ['#pr','#dm','#pt','#ph'].forEach(q=>{el.querySelector(q).oninput=e2;el.querySelector(q).onchange=e2;}); e1(); e2();
+}
+
+/* ---------- 小測驗 ---------- */
+function renderQuiz(el,i){
+  const qs=ISLANDS[i].quiz;
+  el.innerHTML=qs.map((q,qi)=>`<div class="q" data-qi="${qi}"><p style="margin:2px 0"><b>Q${qi+1}.</b> ${q.q}</p>${q.o.map((t,oi)=>`<button class="opt" data-oi="${oi}">${'ABCD'[oi]}. ${t}</button>`).join('')}<div class="ex" aria-live="polite"></div></div>`).join('');
+  el.querySelectorAll('.q').forEach(box=>{
+    const qi=+box.dataset.qi,q=qs[qi],ex=box.querySelector('.ex'),opts=box.querySelectorAll('.opt');
+    const mark=()=>{opts[q.a].classList.add('ok');ex.textContent='✔ 答對了！'+q.ex;};
+    if(done[i].has(qi)) mark();
+    opts.forEach(b=>b.onclick=()=>{
+      if(done[i].has(qi)) return;
+      const oi=+b.dataset.oi;
+      if(oi===q.a){done[i].add(qi);mark();updateProgress(i);scheduleSave();}
+      else{b.classList.add('no');ex.textContent='✖ 再試一次，想想課文的重點～';}
+    });
+  });
+}
+function islandDone(i){return done[i].size===ISLANDS[i].quiz.length;}
+let celebrated=false;
+function updateProgress(i){
+  const n=ISLANDS.filter((_,k)=>islandDone(k)).length;
+  $('#prog').textContent=`⭐ ${n}/5`;
+  document.querySelectorAll('.island-label,#nav .pill[data-i]').forEach(e=>{const k=+e.dataset.i;e.classList.toggle('done',islandDone(k));});
+  if(i!==undefined&&islandDone(i)){ if(stars[i])stars[i].visible=true; toast(n===5?'🎉 五座島全部完成！太棒了！':`🌟 ${ISLANDS[i].name} 完成！`); }
+}
+let tt=null;
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(tt);tt=setTimeout(()=>t.style.display='none',2600);}
+
+/* ---------- 面板與導覽 ---------- */
+const panel=$('#panel');
+function renderWelcome(){
+  panel.innerHTML=`<button class="close" aria-label="關閉">✕</button><span class="tag">歡迎</span><h2>🌈 認識網際網路課程島</h2>
+  <p class="sub">高中數位科技概論・第 9 章</p>
+  <p>這裡有 5 座小島，每座島有一小段重點、一個小活動和幾題小測驗。點一座島，鏡頭就會飄過去～</p>
+  <ul>${ISLANDS.map((d,i)=>`<li><b>${d.id}</b> ${d.emoji} ${d.name}：${d.sub}</li>`).join('')}</ul>
+  <div class="note">🌿 眼睛容易累或怕動來動去嗎？按右上角「低刺激模式」：島嶼停止浮動、顏色變淡、鏡頭瞬間移動、音樂關閉。</div>
+  <div class="pnav"><span></span><button class="pill" id="start">出發去 A 島 ➜</button></div>`;
+  panel.querySelector('.close').onclick=closePanel; panel.querySelector('#start').onclick=()=>openIsland(0);
+  panel.classList.add('open'); panel.scrollTop=0;
+}
+function closePanel(){panel.classList.remove('open');}
+function openIsland(i){
+  current=i; const d=ISLANDS[i]; markVisited(i);
+  panel.innerHTML=`<button class="close" aria-label="關閉">✕</button><span class="tag">島嶼 ${d.id}</span><h2>${d.emoji} ${d.name}</h2><p class="sub">${d.sub}</p>${d.body}
+  <div class="act"><h3>🎮 小活動</h3><div id="wg"></div></div><div class="act"><h3>✏️ 小測驗</h3><div id="qz"></div></div>
+  <div class="pnav"><button class="pill" id="pv">⬅ 上一座</button><button class="pill" id="nx">下一座 ➡</button></div>`;
+  panel.querySelector('.close').onclick=closePanel;
+  const wg=panel.querySelector('#wg'); d.widget(wg); renderQuiz(panel.querySelector('#qz'),i);
+  ['click','input'].forEach(ev=>wg.addEventListener(ev,()=>markActed(i)));
+  panel.querySelector('#pv').onclick=()=>openIsland((i+4)%5); panel.querySelector('#nx').onclick=()=>openIsland((i+1)%5);
+  panel.classList.add('open'); panel.scrollTop=0;
+  document.querySelectorAll('.island-label,#nav .pill[data-i]').forEach(e=>e.classList.toggle('active',+e.dataset.i===i));
+  focusIsland(i);
+}
+function goHome(){
+  current=-1; document.querySelectorAll('.active').forEach(e=>e.classList.remove('active'));
+  renderWelcome(); flyTo(...overviewPose());
+}
+/* 導覽列與標籤 */
+$('#nav').innerHTML=ISLANDS.map((d,i)=>`<button class="pill" data-i="${i}">${d.emoji} ${d.id}</button>`).join('')+'<span id="prog">⭐ 0/5</span>';
+document.querySelectorAll('#nav .pill').forEach(b=>b.onclick=()=>openIsland(+b.dataset.i));
+$('#labels').innerHTML=ISLANDS.map((d,i)=>`<button class="island-label" data-i="${i}">${d.emoji} ${d.id}｜${d.name}</button>`).join('');
+document.querySelectorAll('.island-label').forEach(b=>b.onclick=()=>openIsland(+b.dataset.i));
+$('#btnHome').onclick=goHome;
+addEventListener('keydown',e=>{
+  if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+  if(e.key>='1'&&e.key<='5') openIsland(+e.key-1);
+  else if(e.key==='Escape') goHome();
+});
+
+/* ---------- 3D ---------- */
+let scene,camera,renderer,controls,groups=[],stars=[],cloudG,mats=[],tw=null,hover=-1,ok3d=false;
+const R=12;
+const overviewPose=()=>isMobile()?[new THREE.Vector3(0,26,36),new THREE.Vector3(0,0,0)]:[new THREE.Vector3(0,19,27),new THREE.Vector3(0,0,0)];
+function flyTo(p,t){
+  if(!ok3d) return;
+  tw={s:performance.now(),d:low?1:1500,p0:camera.position.clone(),c0:controls.target.clone(),p1:p,c1:t};
+}
+function focusIsland(i){
+  if(!ok3d) return;
+  const g=groups[i],th=g.userData.th,out=new THREE.Vector3(Math.sin(th),0,Math.cos(th));
+  const right=new THREE.Vector3(out.z,0,-out.x);
+  const cam=g.position.clone().addScaledVector(out,isMobile()?10.5:8.5).add(new THREE.Vector3(0,5.2,0));
+  const tgt=g.position.clone().add(new THREE.Vector3(0,.9,0));
+  if(isMobile()) tgt.y-=2.4; else tgt.addScaledVector(right,2.8);
+  flyTo(cam,tgt);
+}
+function M(hex){const m=new THREE.MeshStandardMaterial({color:hex,roughness:.95,metalness:0});m.userData.base=new THREE.Color(hex);mats.push(m);return m;}
+const GRAY=ok=>0;
+function applyMood(){
+  if(!ok3d) return;
+  const gray=new THREE.Color(0xd9d6e2);
+  mats.forEach(m=>m.color.copy(m.userData.base).lerp(gray,low?.5:0));
+  groups.forEach(g=>{g.position.y=0;g.scale.setScalar(1);});
+  if(cloudG) cloudG.visible=!low;
+}
+function init3D(){
+  if(typeof THREE==='undefined'||!THREE.OrbitControls){document.body.classList.add('no3d');return;}
+  try{
+    const canvas=$('#c');
+    renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+    renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    scene=new THREE.Scene();
+    camera=new THREE.PerspectiveCamera(45,1,.1,300);
+    controls=new THREE.OrbitControls(camera,canvas);
+    controls.enableDamping=true;controls.dampingFactor=.08;controls.enablePan=false;
+    controls.minDistance=5;controls.maxDistance=50;controls.maxPolarAngle=Math.PI*.49;
+    scene.add(new THREE.HemisphereLight(0xffffff,0xd6d0ff,1.0));
+    const dl=new THREE.DirectionalLight(0xfff1e6,.75);dl.position.set(10,20,8);scene.add(dl);
+    // 柔和海面
+    const cv=document.createElement('canvas');cv.width=cv.height=256;const cx=cv.getContext('2d');
+    const gr=cx.createRadialGradient(128,128,10,128,128,128);gr.addColorStop(0,'rgba(176,222,240,1)');gr.addColorStop(.6,'rgba(196,226,246,.85)');gr.addColorStop(1,'rgba(210,225,250,0)');
+    cx.fillStyle=gr;cx.fillRect(0,0,256,256);
+    const sea=new THREE.Mesh(new THREE.PlaneGeometry(110,110),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthWrite:false}));
+    sea.rotation.x=-Math.PI/2;sea.position.y=-.6;scene.add(sea);
+    // 星球與小星點（靜止）
+    const planet=new THREE.Mesh(new THREE.SphereGeometry(4,32,24),M(0xf6c6e0));planet.position.set(-34,22,-50);scene.add(planet);
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(6.5,.35,8,64),M(0xfff0b8));ring.position.copy(planet.position);ring.rotation.set(1.2,.3,0);scene.add(ring);
+    const moon=new THREE.Mesh(new THREE.SphereGeometry(1.6,24,18),M(0xc9d8ff));moon.position.set(38,16,-46);scene.add(moon);
+    const pts=[];for(let k=0;k<140;k++){const a=Math.random()*Math.PI*2,r=60+Math.random()*30;pts.push(Math.cos(a)*r,12+Math.random()*40,Math.sin(a)*r-20);}
+    const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
+    scene.add(new THREE.Points(pg,new THREE.PointsMaterial({color:0xffffff,size:.7,transparent:true,opacity:.85})));
+    // 雲
+    cloudG=new THREE.Group();
+    for(let k=0;k<7;k++){const c=new THREE.Group();const a=k/7*Math.PI*2,rr=26+Math.random()*6;
+      for(let j=0;j<3;j++){const s=new THREE.Mesh(new THREE.SphereGeometry(1.3+Math.random()*.7,16,12),M(0xffffff));s.position.set(j*1.4-1.4,Math.random()*.4,Math.random()*.6);s.scale.y=.6;c.add(s);}
+      c.position.set(Math.sin(a)*rr,9+Math.random()*4,Math.cos(a)*rr);cloudG.add(c);}
+    scene.add(cloudG);
+    for(let i=0;i<5;i++) buildIsland(i);
+    ok3d=true; _v=new THREE.Vector3();
+    resize();addEventListener('resize',resize);
+    const [p,t]=overviewPose();camera.position.copy(p);controls.target.copy(t);
+    // 點選
+    let down=null;const ray=new THREE.Raycaster(),nd=new THREE.Vector2();
+    const pick=e=>{const r=canvas.getBoundingClientRect();nd.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(nd,camera);
+      const h=ray.intersectObjects(groups,true);if(!h.length)return -1;let o=h[0].object;while(o&&o.userData.idx===undefined)o=o.parent;return o?o.userData.idx:-1;};
+    canvas.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};});
+    canvas.addEventListener('pointerup',e=>{if(!down)return;const d=Math.hypot(e.clientX-down.x,e.clientY-down.y);down=null;if(d<6){const i=pick(e);if(i>=0)openIsland(i);}});
+    canvas.addEventListener('pointermove',e=>{if(e.buttons)return;hover=pick(e);canvas.style.cursor=hover>=0?'pointer':'grab';});
+    applyMood();
+    requestAnimationFrame(loop);
+  }catch(err){console.error(err);document.body.classList.add('no3d');}
+}
+function resize(){if(!renderer)return;renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();}
+const TOP=[0xbfe8cf,0xbcd9ff,0xfff0b8,0xd8ccf5,0xffd2b8], MASC=[0xffb3c6,0xa9d6ff,0xffe08a,0xc9b8f5,0xffc09f];
+function add(g,geo,hex,pos,rot){const m=new THREE.Mesh(geo,M(hex));m.position.set(...pos);if(rot)m.rotation.set(...rot);g.add(m);return m;}
+function buildIsland(i){
+  const g=new THREE.Group(),th=i/5*Math.PI*2;
+  g.position.set(Math.sin(th)*R,0,Math.cos(th)*R);g.rotation.y=th;g.userData={idx:i,th};
+  add(g,new THREE.CylinderGeometry(3.3,3.1,.5,48),TOP[i],[0,.25,0]);
+  add(g,new THREE.CylinderGeometry(3.1,1.4,2.4,48),0xe9d8c6,[0,-1.2,0]);
+  const foam=new THREE.Mesh(new THREE.CircleGeometry(4.4,48),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.45,depthWrite:false}));
+  foam.rotation.x=-Math.PI/2;foam.position.y=-.55;g.add(foam);
+  [[-2.1,.9],[2.3,-1.1]].forEach(([x,z])=>{add(g,new THREE.CylinderGeometry(.1,.12,.5,10),0xc9a58a,[x,.75,z]);add(g,new THREE.SphereGeometry(.5,16,12),0xa8dcb8,[x,1.3,z]);});
+  // 吉祥物
+  const mx=1.5,mz=1.4,my=1.0;
+  const b=add(g,new THREE.SphereGeometry(.55,24,18),MASC[i],[mx,my,mz]);b.scale.y=.9;
+  const dark=new THREE.MeshBasicMaterial({color:0x4a4560});
+  [-.2,.2].forEach(dx=>{const e=new THREE.Mesh(new THREE.SphereGeometry(.065,10,8),dark);e.position.set(mx+dx,my+.1,mz+.52);g.add(e);
+    const ch=add(g,new THREE.SphereGeometry(.09,10,8),0xff9db9,[mx+dx*1.5,my-.05,mz+.43]);ch.scale.z=.5;});
+  const mo=new THREE.Mesh(new THREE.TorusGeometry(.09,.022,8,16,Math.PI),dark);mo.rotation.z=Math.PI;mo.position.set(mx,my-.08,mz+.515);g.add(mo);
+  // 主題物件
+  if(i===0){add(g,new THREE.BoxGeometry(1.3,.9,1.2),0xfff1f5,[0,.95,-.5]);add(g,new THREE.ConeGeometry(1,.65,4),0xf4a6c0,[0,1.72,-.5],[0,Math.PI/4,0]);
+    add(g,new THREE.CylinderGeometry(.05,.05,1.4,8),0xffffff,[.45,2.3,-.5]);add(g,new THREE.SphereGeometry(.13,12,10),0xff8fb1,[.45,3.05,-.5]);}
+  if(i===1){add(g,new THREE.BoxGeometry(.7,.35,.7),0xffffff,[0,.68,-.3]);
+    [.5,.85,1.2].forEach((r,k)=>add(g,new THREE.TorusGeometry(r,.07,10,32,Math.PI/2),[0x9fc5ff,0xb6d4ff,0xcfe2ff][k],[0,1.0,-.3],[0,0,Math.PI/4]));
+    add(g,new THREE.SphereGeometry(.13,12,10),0x7fb0ff,[0,1.0,-.3]);}
+  if(i===2){add(g,new THREE.BoxGeometry(1.4,1,1.2),0xfff6d6,[0,1.0,-.5]);add(g,new THREE.ConeGeometry(1.2,.7,4),0xffb08a,[0,1.85,-.5],[0,Math.PI/4,0]);
+    add(g,new THREE.BoxGeometry(.3,.55,.05),0xc9a58a,[0,.78,.13]);
+    for(let k=0;k<4;k++)add(g,new THREE.BoxGeometry(.34,.34,.34),[0xffd9e4,0xd7e8ff,0xdff3e4,0xe6dcff][k],[-1.5+k*.5,.7,.9]);}
+  if(i===3){[[-.5,-1],[.5,-1],[-.5,0],[.5,0]].forEach(([x,z],k)=>add(g,new THREE.BoxGeometry(.85,.8+k*.12,.85),[0xffd9e4,0xd7e8ff,0xfff1b8,0xdff3e4][k],[x,.9+k*.06,z-.1]));}
+  if(i===4){add(g,new THREE.CylinderGeometry(.1,.1,.9,8),0xc9a58a,[0,.95,-.5]);add(g,new THREE.SphereGeometry(.85,28,20),0xbfe3f2,[0,1.9,-.5]);
+    add(g,new THREE.TorusGeometry(1.2,.05,8,48),0xf4a6c0,[0,1.9,-.5],[Math.PI/2.4,0,.3]);}
+  const st=add(g,new THREE.IcosahedronGeometry(.28,0),0xffd966,[0,3.4,0]);st.visible=false;stars[i]=st;
+  groups.push(g);scene.add(g);
+}
+let _v=null;
+function loop(now){
+  requestAnimationFrame(loop);
+  const s=now/1000;
+  if(tw){let k=Math.min(1,(now-tw.s)/tw.d);const e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    camera.position.lerpVectors(tw.p0,tw.p1,e);camera.position.y+=Math.sin(Math.PI*e)*(low?0:3);
+    controls.target.lerpVectors(tw.c0,tw.c1,e);if(k>=1)tw=null;}
+  if(!low){
+    groups.forEach((g,i)=>{g.position.y=Math.sin(s*.6+i*1.3)*.12;const t=(hover===i||current===i)?1.04:1;g.scale.setScalar(g.scale.x+(t-g.scale.x)*.08);});
+    cloudG.rotation.y+=.0003;
+  }
+  controls.update();renderer.render(scene,camera);
+  const W=innerWidth,H=innerHeight;
+  document.querySelectorAll('.island-label').forEach((el,i)=>{
+    _v.copy(groups[i].position);_v.y+=3.5;_v.project(camera);
+    const vis=_v.z<1&&Math.abs(_v.x)<1.2;el.style.display=vis?'':'none';
+    el.style.transform=`translate(-50%,-50%) translate(${(_v.x*.5+.5)*W}px,${(-_v.y*.5+.5)*H}px)`;
+  });
+}
+
+/* ---------- 低刺激模式 ---------- */
+function setLow(v){
+  low=v;document.body.classList.toggle('low',v);
+  const b=$('#btnLow');b.setAttribute('aria-pressed',v);b.textContent='🌿 低刺激模式：'+(v?'開':'關');
+  try{localStorage.setItem('island_low',v?'1':'0');}catch(e){}
+  if(v){tw=null;if(musicOn)stopMusic();toast('已開啟低刺激模式：不浮動、柔和色彩、鏡頭瞬間移動、音樂關閉');}
+  applyMood();
+}
+$('#btnLow').onclick=()=>setLow(!low);
+
+/* ---------- 背景音樂（柔和合成，不需外部檔案） ---------- */
+let ac=null,master=null,musicOn=false,timer=null,pad=[];
+const SC=[261.63,293.66,329.63,392,440,523.25,587.33,659.25];
+function vol(){return $('#vol').value/100*.32;}
+function note(){
+  const t=ac.currentTime,o=ac.createOscillator(),g=ac.createGain();
+  o.type='sine';o.frequency.value=SC[Math.floor(Math.random()*SC.length)]*(Math.random()<.2?.5:1);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.45,t+.9);g.gain.exponentialRampToValueAtTime(.001,t+4.2);
+  o.connect(g);g.connect(master);o.start(t);o.stop(t+4.3);
+}
+function sched(){if(!musicOn)return;note();if(Math.random()<.35)setTimeout(()=>musicOn&&note(),700);timer=setTimeout(sched,1900+Math.random()*1800);}
+function startMusic(){
+  try{
+    if(!ac){ac=new(window.AudioContext||window.webkitAudioContext)();master=ac.createGain();
+      const d=ac.createDelay(1);d.delayTime.value=.5;const fb=ac.createGain();fb.gain.value=.35;d.connect(fb);fb.connect(d);
+      master.connect(ac.destination);master.connect(d);d.connect(ac.destination);}
+    ac.resume();master.gain.cancelScheduledValues(ac.currentTime);master.gain.setValueAtTime(0,ac.currentTime);master.gain.linearRampToValueAtTime(vol(),ac.currentTime+2);
+    pad=[130.81,196].map(f=>{const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=f;g.gain.value=.18;o.connect(g);g.connect(master);o.start();return o;});
+    musicOn=true;sched();
+  }catch(e){musicOn=false;return;}
+  setMusicUI();
+}
+function stopMusic(){
+  musicOn=false;clearTimeout(timer);
+  if(ac){master.gain.cancelScheduledValues(ac.currentTime);master.gain.linearRampToValueAtTime(0,ac.currentTime+.6);const p=pad;pad=[];setTimeout(()=>{p.forEach(o=>{try{o.stop();}catch(e){}});},700);}
+  setMusicUI();
+}
+function setMusicUI(){const b=$('#btnMusic');b.setAttribute('aria-pressed',musicOn);b.textContent='🎵 背景音樂：'+(musicOn?'開':'關');}
+$('#btnMusic').onclick=()=>musicOn?stopMusic():startMusic();
+$('#vol').oninput=()=>{if(ac&&musicOn)master.gain.value=vol();};
+
+/* ---------- 課堂同步（學號＋進度） ---------- */
+const visited=new Set(), acted=new Set();
+let sid=null, syncState='off', lastSync=0, dirty=false, saveTimer=null, saving=false;
+const SID_RE=/^[A-Za-z0-9]{3,12}$/;
+const lsGet=k=>{try{return localStorage.getItem(k);}catch(e){return null;}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
+// 用 <script> 載入 Apps Script 的回應（JSONP），從本機檔案開啟也不會被跨網站限制擋住
+function jsonp(params,timeout){
+  return new Promise((res,rej)=>{
+    const cb='__cb'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    const s=document.createElement('script'); let t;
+    const clean=()=>{clearTimeout(t);window[cb]=()=>{delete window[cb];};s.remove();};
+    window[cb]=d=>{clean();res(d);};
+    s.onerror=()=>{clean();rej(new Error('連不到網址（請檢查 SYNC_URL 與存取權）'));};
+    t=setTimeout(()=>{clean();rej(new Error('逾時'));},timeout||12000);
+    s.src=SYNC_URL+(SYNC_URL.includes('?')?'&':'?')+new URLSearchParams(Object.assign({},params,{callback:cb}));
+    document.head.appendChild(s);
+  });
+}
+let lastErr='';
+function snapshot(){
+  return {v:1,cur:current,
+    visited:ISLANDS.map((_,i)=>visited.has(i)),
+    acted:ISLANDS.map((_,i)=>acted.has(i)),
+    quiz:done.map(s=>[...s].sort((a,b)=>a-b))};
+}
+function applyState(st){
+  if(!st||!Array.isArray(st.quiz)) return;
+  ISLANDS.forEach((d,i)=>{
+    if(st.visited&&st.visited[i]) visited.add(i);
+    if(st.acted&&st.acted[i]) acted.add(i);
+    (st.quiz[i]||[]).forEach(q=>{if(Number.isInteger(q)&&q>=0&&q<d.quiz.length) done[i].add(q);});
+  });
+  stars.forEach((s,i)=>{if(s) s.visible=islandDone(i);});
+  updateProgress();
+}
+function markVisited(i){ if(!visited.has(i)) visited.add(i); scheduleSave(); }
+function markActed(i){ if(!acted.has(i)){ acted.add(i); scheduleSave(); } }
+function setSync(s){
+  syncState=s;
+  const chip=$('#syncchip'); if(!sid){chip.hidden=true;return;}
+  const t={off:'未設定同步',local:'僅存在這台電腦',pending:'同步中…',
+    ok:'已同步 '+new Date(lastSync).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',hour12:false}),
+    error:'連線不穩，進度先存在這台電腦'+(lastErr?'（'+lastErr+'）':'')}[s];
+  chip.textContent='學號 '+sid+'・'+({ok:'☁️ ',pending:'⏳ ',error:'⚠️ ',local:'💾 ',off:'💾 '}[s])+t;
+  chip.hidden=false;
+}
+function scheduleSave(){
+  if(!sid) return;
+  lsSet('island_prog_'+sid,JSON.stringify(snapshot()));
+  dirty=true;
+  if(!SYNC_URL){setSync('local');return;}
+  if(syncState!=='error') setSync('pending');
+  clearTimeout(saveTimer); saveTimer=setTimeout(flush,1500);
+}
+async function flush(){
+  if(!sid||!SYNC_URL||!dirty||saving) return;
+  saving=true; dirty=false;
+  try{
+    const r=await jsonp({action:'save',sid,state:JSON.stringify(snapshot())});
+    if(!r||!r.ok) throw new Error((r&&r.error)||'fail');
+    lastSync=Date.now(); lastErr=''; setSync('ok');
+  }catch(e){
+    lastErr=e&&e.message||'未知錯誤'; console.warn('同步失敗：',lastErr);
+    dirty=true; setSync('error'); clearTimeout(saveTimer); saveTimer=setTimeout(flush,15000);
+  }finally{
+    saving=false;
+    if(dirty&&syncState!=='error'){clearTimeout(saveTimer);saveTimer=setTimeout(flush,800);}
+  }
+}
+addEventListener('pagehide',()=>{
+  if(sid&&SYNC_URL&&dirty&&navigator.sendBeacon){
+    try{navigator.sendBeacon(SYNC_URL,new Blob([JSON.stringify({action:'save',sid,state:snapshot()})],{type:'text/plain;charset=utf-8'}));}catch(e){}
+  }
+});
+async function login(id){
+  sid=id; lsSet('island_last_sid',id); $('#login').hidden=true;
+  const loc=lsGet('island_prog_'+id);
+  if(loc){try{applyState(JSON.parse(loc));}catch(e){}}
+  $('#btnSwitch').hidden=false;
+  setSync(SYNC_URL?'pending':'local');
+  if(SYNC_URL){
+    try{
+      const r=await jsonp({action:'get',sid:id});
+      if(r&&r.ok&&r.state) applyState(r.state);
+    }catch(e){}
+  }
+  toast('歡迎，'+id+'！進度會自動儲存');
+  syncState='pending'; scheduleSave();   // 登入就先回報一次，老師馬上看得到
+}
+function initSync(){
+  $('#lgNote').textContent=SYNC_URL?'':'（老師尚未設定同步網址，進度只會存在這台電腦。）';
+  $('#sidin').value=lsGet('island_last_sid')||'';
+  $('#lgForm').onsubmit=ev=>{
+    ev.preventDefault();
+    const v=$('#sidin').value.trim().toUpperCase();
+    if(!SID_RE.test(v)){$('#lgErr').textContent='學號要是 3～12 位的英文或數字，請再檢查一次。';return;}
+    $('#lgErr').textContent=''; login(v);
+  };
+  $('#lgSkip').onclick=()=>{$('#login').hidden=true;};
+  $('#btnSwitch').onclick=async()=>{await flush();location.reload();};
+  $('#btnTeacher').onclick=openTeacher;
+  setTimeout(()=>{try{$('#sidin').focus();}catch(e){}},0);
+}
+
+/* ---------- 教師頁 ---------- */
+let tKey='', tTimer=null, tRows=[];
+const maxScore=i=>2+ISLANDS[i].quiz.length;
+function scoreOf(st,i){
+  if(!st) return 0;
+  return (st.visited&&st.visited[i]?1:0)+(st.acted&&st.acted[i]?1:0)+((st.quiz&&st.quiz[i])||[]).length;
+}
+function starsOf(st){return ISLANDS.filter((_,i)=>st&&st.quiz&&(st.quiz[i]||[]).length===ISLANDS[i].quiz.length).length;}
+function ago(ts){
+  if(!ts) return '—';
+  const m=Math.floor((Date.now()-ts)/60000);
+  return m<1?'剛剛':m<60?m+' 分鐘前':Math.floor(m/60)+' 小時前';
+}
+function closeTeacher(){clearInterval(tTimer);tTimer=null;$('#teacher').hidden=true;}
+function openTeacher(){
+  const o=$('#teacher'); o.hidden=false;
+  o.innerHTML=`<div class="card"><div class="thead"><h2>👩‍🏫 全班進度</h2><button class="btn ghost" id="tClose">關閉</button></div>`+
+  (SYNC_URL?`<div class="row2" style="margin:6px 0 0"><label for="tkey" style="margin:0">教師密碼</label><input type="password" id="tkey" style="width:170px;margin:0" autocomplete="off"><button class="btn" id="tLoad">載入</button><label style="margin:0;display:flex;gap:4px;align-items:center"><input type="checkbox" id="tAuto">每 15 秒自動更新</label><button class="btn ghost" id="tCsv">匯出 CSV</button></div>`
+   :`<p>尚未設定同步網址。請在 HTML 檔最上方的 <b>SYNC_URL</b> 貼上 Apps Script 網址後，再開啟這個頁面。</p>`)+
+  `<div class="err" id="tErr" role="alert"></div><div id="tSum"></div><div class="tw" id="tTable"></div></div>`;
+  $('#tClose').onclick=closeTeacher;
+  if(!SYNC_URL) return;
+  $('#tkey').value=tKey;
+  $('#tLoad').onclick=()=>{tKey=$('#tkey').value;loadTeacher();};
+  $('#tkey').onkeydown=e=>{if(e.key==='Enter'){tKey=$('#tkey').value;loadTeacher();}};
+  $('#tAuto').onchange=e=>{clearInterval(tTimer);tTimer=e.target.checked?setInterval(loadTeacher,15000):null;};
+  $('#tCsv').onclick=exportCsv;
+  if(tKey) loadTeacher(); else $('#tkey').focus();
+  renderTeacher();
+}
+async function loadTeacher(){
+  const err=$('#tErr'); if(!err) return;
+  try{
+    const r=await jsonp({action:'list',key:tKey});
+    if(!r||!r.ok){err.textContent=r&&r.error==='unauthorized'?'教師密碼不正確。':'讀取失敗：'+((r&&r.error)||'未知錯誤');return;}
+    err.textContent=''; tRows=r.rows||[]; renderTeacher();
+  }catch(e){err.textContent='連不上同步服務：'+(e&&e.message||'')+'。請稍後再按「載入」。';}
+}
+function renderTeacher(){
+  const box=$('#tTable'); if(!box) return;
+  const rows=tRows.slice().sort((a,b)=>String(a.sid).localeCompare(String(b.sid)));
+  const full=rows.filter(r=>starsOf(r.state)===5).length;
+  const live=rows.filter(r=>Date.now()-r.ts<5*60000).length;
+  $('#tSum').textContent=rows.length?`共 ${rows.length} 位學生・5 座島全完成 ${full} 位・5 分鐘內有操作 ${live} 位`:'還沒有學生資料。學生輸入學號後會立刻出現在這裡。';
+  const tbl=document.createElement('table');
+  const hr=tbl.insertRow();
+  ['學號',...ISLANDS.map(d=>d.id+' '+d.emoji),'完成島數','目前所在','最後更新'].forEach(t=>{const th=document.createElement('th');th.textContent=t;hr.appendChild(th);});
+  rows.forEach(r=>{
+    const tr=tbl.insertRow(); const st=r.state;
+    tr.insertCell().textContent=r.sid;
+    ISLANDS.forEach((d,i)=>{
+      const s=scoreOf(st,i),m=maxScore(i),td=tr.insertCell();
+      td.className='num '+(s===0?'c0':s>=m?'c2':'c1'); td.textContent=s+'/'+m;
+      td.title='到訪 '+(st&&st.visited&&st.visited[i]?'✓':'—')+'　活動 '+(st&&st.acted&&st.acted[i]?'✓':'—')+'　測驗 '+(((st&&st.quiz&&st.quiz[i])||[]).length)+'/'+d.quiz.length;
+    });
+    tr.insertCell().textContent=starsOf(st)+' / 5';
+    tr.insertCell().textContent=st&&st.cur>=0?ISLANDS[st.cur].id:'—';
+    tr.insertCell().textContent=ago(r.ts);
+  });
+  box.replaceChildren(tbl);
+}
+function exportCsv(){
+  const rows=tRows.slice().sort((a,b)=>String(a.sid).localeCompare(String(b.sid)));
+  const lines=[['學號',...ISLANDS.map(d=>d.id+'島分數(滿分'+maxScore(ISLANDS.indexOf(d))+')'),'完成島數','最後更新'].join(',')];
+  rows.forEach(r=>lines.push(['"'+String(r.sid).replace(/"/g,'""')+'"',...ISLANDS.map((_,i)=>scoreOf(r.state,i)),starsOf(r.state),r.ts?new Date(r.ts).toLocaleString('zh-TW',{hour12:false}):''].join(',')));
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}));
+  a.download='課程島進度.csv'; document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* ---------- 啟動 ---------- */
+document.body.classList.toggle('low',low);
+$('#btnLow').setAttribute('aria-pressed',low);$('#btnLow').textContent='🌿 低刺激模式：'+(low?'開':'關');
+init3D();
+renderWelcome();
+initSync();
+</script>
+</body>
+</html>
